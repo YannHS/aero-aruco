@@ -1,0 +1,17 @@
+## Dependencies
+`opencv-python`
+`numpy`
+`getopt`
+`pickle`
+
+## Usage
+The intended workflow is:
+1. Capture an image of a chessboard using `image_capture.py` 
+2. Calculate the camera coefficients using `calibration.py` to be saved for later
+3. Run `main.py` to use the calibration data to get marker positions using the camera
+
+## Todo
+- [x] implement image capture and saving
+- [x] Calculate calibration data
+- [ ] pickle the calibration data for future use
+- [ ] write a main program to determine marker locations
