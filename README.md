@@ -14,10 +14,11 @@ Example:
 ```commandline
 python image_capture.py -c 1 -w 1920 -h 1080
 python calibration.py -w 9 -h 6 --square_size 22 cam_output/0_capture.png
+python main.py -c calibration.json -w 1920 -h 1080
 ```
 
 ## Todo
 - [x] implement image capture and saving
 - [x] Calculate calibration data
-- [ ] Write the calibration data for future use
+- [x] Write the calibration data for future use
 - [ ] write a main program to determine marker locations
