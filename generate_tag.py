@@ -1,16 +1,15 @@
 '''
 Aruco tag generation
-Generates aruco tag image files
+Generates square aruco tag image files with specified width
 
 usage:
-    generate_tag.py [-w <image width>] [-h <image height>] [-i <tag id>] [-t <aruco dictionary type>] [-o <output image file>]
+    generate_tag.py [-w <image width>] [-i <tag id>] [-t <aruco dictionary type>] [-o <output image file>]
 
 usage example:
-    generate_tag.py -w 100 -h 100 -i 1 -t DICT_4X4_50 -o tag.png
+    generate_tag.py -w 100 -i 1 -t DICT_4X4_50 -o tag.png
 
 default values:
     -w: 100
-    -h: 100
     -i: 1
     -t DICT_4X4_50
     -o tag.png
@@ -19,9 +18,9 @@ default values:
 import sys
 import getopt
 import cv2 as cv
-import numpy
+import numpy as np
 
-aruco_dicts = {
+aruco_dict = {
     'DICT_4X4_50': cv.aruco.DICT_4X4_50,
     'DICT_4X4_100': cv.aruco.DICT_4X4_100,
     'DICT_4X4_250': cv.aruco.DICT_4X4_250,
@@ -45,4 +44,36 @@ aruco_dicts = {
     'DICT_APRILTAG_36h11': cv.aruco.DICT_APRILTAG_36h11
 }
 
+
+
 def main():
+
+
+    # Process the arguments
+    args, img_names = getopt.getopt(sys.argv[1:], 'w:i:t:o:', [])
+
+    args = dict(args)
+
+    args.setdefault('-w', '100')
+    args.setdefault('-i', '0')
+    args.setdefault('-t', 'DICT_4X4_50')
+    args.setdefault('-o', 'tag.png')
+
+    width = int(args.get('-w'))
+    tag_id = int(args.get('-i'))
+    tag_type = str(args.get('-t'))
+    tag_image_file = str(args.get('-o'))
+
+    # Create the tag image with all zeros
+    tag = np.zeros((width, width, 1), dtype="uint8")
+
+    # get the actual tag from the specified argument
+    aruco_tag = cv.aruco.getPredefinedDictionary(aruco_dict[tag_type])
+
+    # draw the actual marker bitmap
+    cv.aruco.generateImageMarker(aruco_tag, tag_id, width, tag, 1)
+
+    # write the generated ArUCo tag to disk
+    cv.imwrite(tag_image_file, tag)
+
+main()

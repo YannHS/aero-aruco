@@ -16,7 +16,7 @@ default values:
 import sys
 import getopt
 import cv2 as cv
-import numpy
+import numpy as np
 
 def main():
     # Get CMD arguments
