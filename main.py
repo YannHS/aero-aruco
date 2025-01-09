@@ -53,6 +53,8 @@ def main():
         ret, frame = cam.read()
         # Check if image acquisition is successful
         if ret:
+            # Get the 3d position from the tag data
+
             pass
         else:
             print("failed to grab frame")
