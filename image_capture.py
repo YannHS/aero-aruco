@@ -61,6 +61,7 @@ usage example:
         cam.set(cv.CAP_PROP_FRAME_HEIGHT, int(args.get('-h')))
         cam.set(cv.CAP_PROP_EXPOSURE, int(args.get('-e')))
         cam.set(cv.CAP_PROP_FPS, 60)
+        cam.set(cv.CAP_PROP_FOCUS, 0.5)
         ret, frame = cam.read()
 
         # Check if image acquisition is successful
