@@ -54,13 +54,21 @@ def main():
     # Read the calibration file
     calibration_file = open(calibration_data_file, 'r')
     json_camera_data = json.loads(calibration_file.read())
-    cam_matrix = json_camera_data[0]
-    dist_coefficients = json_camera_data[1]
+    cam_matrix = np.array(json_camera_data[0])
+    dist_coefficients = np.array(json_camera_data[1])
 
     aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_50)
     aruco_parameters = cv.aruco.DetectorParameters()
     aruco_detector = cv.aruco.ArucoDetector(aruco_dict, aruco_parameters)
 
+    # Set coordinate system
+    markerLength = 93
+    obj_points = np.array([
+        [-markerLength / 2.0, markerLength / 2.0, 0],
+        [markerLength / 2.0, markerLength / 2.0, 0],
+        [markerLength / 2.0, -markerLength / 2.0, 0],
+        [-markerLength / 2.0, -markerLength / 2.0, 0]
+    ], dtype=np.float32)
 
     while True:
         # aquire camera image
@@ -69,13 +77,14 @@ def main():
         # Check if image acquisition is successful
         if ret:
             # Detect the tag corners
-            corners, ids, rejected = aruco_detector.detectMarkers(frame)
+            aruco_corners, aruco_ids, rejected = aruco_detector.detectMarkers(frame)
 
             # Make sure a tag was actually detected
-            if ids != None:
+            if len(aruco_corners) > 0:
 
-                for x in corners:
-                    flag, rvec, tvec = cv.solvePnP(cam_matrix, dist_coefficients)
+                for x in aruco_corners:
+                    flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
+                    print(tvec)
         else:
             print("failed to grab frame")
             return -1
