@@ -64,10 +64,10 @@ def main():
     # Set coordinate system
     markerLength = 93
     obj_points = np.array([
-        [-markerLength / 2.0, markerLength / 2.0, 0],
-        [markerLength / 2.0, markerLength / 2.0, 0],
-        [markerLength / 2.0, -markerLength / 2.0, 0],
-        [-markerLength / 2.0, -markerLength / 2.0, 0]
+        [-markerLength, markerLength, 0],
+        [markerLength, markerLength, 0],
+        [markerLength, -markerLength, 0],
+        [-markerLength, -markerLength, 0]
     ], dtype=np.float32)
 
     while True:
@@ -84,7 +84,7 @@ def main():
 
                 for x in aruco_corners:
                     flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
-                    print(tvec)
+                    print("Rotation:", '\n', rvec, '\n', "Translation:", '\n', tvec)
         else:
             print("failed to grab frame")
             return -1
