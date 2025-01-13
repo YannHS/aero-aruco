@@ -15,6 +15,8 @@ default values:
 import os
 import sys
 import getopt
+import time
+
 import cv2 as cv
 import numpy as np
 import json
@@ -43,7 +45,7 @@ def main():
     calibration_data_file = str(args.get('-c'))
 
     # set the camera
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(0, cv.CAP_FFMPEG)
 
     # set camera params
     cam.set(cv.CAP_PROP_FRAME_WIDTH, int(args.get('-w')))
