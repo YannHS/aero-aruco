@@ -1,21 +1,25 @@
+# Aero uOttawa companion computer for Ardupilot
+This code repository is intended to be run on a Raspberry pi CM4 on the Ochin baseboard connected to Arducam's OV2311 with global shutter and a resolution of 1600 by 1300. The position data this program captures is intended to be communicated over Mavlink to a Pixhawk running Ardupilot to help it pick up a payload.
+
+
 ## Dependencies
 `opencv-python`
 `numpy`
 `getopt`
-`pickle`
+`picamera2`
 
 ## Usage
 The intended workflow is:
-1. Capture an image of a chessboard using `image_capture.py` 
-2. Calculate the camera coefficients using `calibration.py` to be saved for later
+1. Capture an image of a chessboard or Charuco board using `image_capture.py` 
+2. Calculate the camera coefficients using `calibration.py` to be saved for later in a `.json`
 3. Run `main.py` to use the calibration data to get marker positions using the camera
 
 Example:
 ```commandline
-python image_capture.py -c 1 -w 1920 -h 1080 # This captures an image for calibration
-python calibration.py -w 9 -h 6 --square_size 22 cam_output/0_capture.png # This determines distortion coefficiants from the image
+python image_capture.py -c 3 -w 1600 -h 1300 # This captures images for calibration
+python calibration.py -w 9 -h 6 --square_size 22 cam_output/0_capture.png # This determines distortion coefficiants from the image when using the chessboard calibration pattern.
 python generate_tag.py # Generates the Aruco tag for detecting
-python main.py -c calibration.json -w 1920 -h 1080 # This runs the main tag detection and pose estimation program
+python main.py -c calibration.json -w 1600 -h 1300 # This runs the main tag detection and pose estimation program
 ```
 
 ## Todo
@@ -24,3 +28,5 @@ python main.py -c calibration.json -w 1920 -h 1080 # This runs the main tag dete
 - [x] Write the calibration data for future use
 - [X] write a main program to determine marker locations
 - [ ] Implement communication over Mavlink to convey the goal to the Pixhawk flight controller
+- [ ] Use Automation to automate the setup of this software on a fresh Raspbian install
+- [ ] Create software to visualize the location data obtained by this program
