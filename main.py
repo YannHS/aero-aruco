@@ -20,6 +20,7 @@ import time
 import cv2 as cv
 import numpy as np
 import json
+from picamera2 import Picamera2
 
 
 
@@ -44,14 +45,21 @@ def main():
     # Assign arguments to variables
     calibration_data_file = str(args.get('-c'))
 
-    # set the camera
-    cam = cv.VideoCapture(0, cv.CAP_FFMPEG)
+    # set the camera OpenCV cameras
+    # cam = cv.VideoCapture(0, cv.CAP_FFMPEG)
 
-    # set camera params
-    cam.set(cv.CAP_PROP_FRAME_WIDTH, int(args.get('-w')))
-    cam.set(cv.CAP_PROP_FRAME_HEIGHT, int(args.get('-h')))
-    cam.set(cv.CAP_PROP_EXPOSURE, int(args.get('-e')))
-    cam.set(cv.CAP_PROP_FPS, 60)
+    # set camera params vor OpenVC camera
+    # cam.set(cv.CAP_PROP_FRAME_WIDTH, int(args.get('-w')))
+    # cam.set(cv.CAP_PROP_FRAME_HEIGHT, int(args.get('-h')))
+    # cam.set(cv.CAP_PROP_EXPOSURE, int(args.get('-e')))
+    # cam.set(cv.CAP_PROP_FPS, 60)
+
+    # set the camera for the Pi
+    camera = Picamera2()
+    camera.configure(camera.create_preview_configuration(main={"size": (1600, 1300)}))
+    camera.start()
+
+
 
     # Read the calibration file
     calibration_file = open(calibration_data_file, 'r')
@@ -64,7 +72,7 @@ def main():
     aruco_detector = cv.aruco.ArucoDetector(aruco_dict, aruco_parameters)
 
     # Set coordinate system
-    markerLength = 93
+    markerLength = 93/2
     obj_points = np.array([
         [-markerLength, markerLength, 0],
         [markerLength, markerLength, 0],
@@ -77,7 +85,7 @@ def main():
         ret, frame = cam.read()
         frame = cv.cvtColor(frame, cv.COLOR_RGBA2BGR)
         # Check if image acquisition is successful
-        if ret:
+        if True:
             # Detect the tag corners
             aruco_corners, aruco_ids, rejected = aruco_detector.detectMarkers(frame)
 
@@ -87,9 +95,6 @@ def main():
                 for x in aruco_corners:
                     flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
                     print("Rotation:", '\n', rvec, '\n', "Translation:", '\n', tvec)
-        else:
-            print("failed to grab frame")
-            return -1
 
 
 main()

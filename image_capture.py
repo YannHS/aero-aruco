@@ -20,7 +20,7 @@ import sys
 import getopt
 import os
 import cv2 as cv
-import time
+from picamera2 import Picamera2
 
 def main():
     # Get CMD arguments
@@ -51,21 +51,36 @@ usage example:
     if not os.path.isdir(image_output_dir):
         os.mkdir(image_output_dir)
 
-    cam = cv.VideoCapture(0)
+
+    # Create OpenCV cam
+    # cam = cv.VideoCapture(0)
+
+    # set OpenCV camera params
+    # cam.set(cv.CAP_PROP_FRAME_WIDTH, int(args.get('-w')))
+    # cam.set(cv.CAP_PROP_FRAME_HEIGHT, int(args.get('-h')))
+    # cam.set(cv.CAP_PROP_EXPOSURE, int(args.get('-e')))
+    # cam.set(cv.CAP_PROP_FPS, 60)
+    # cam.set(cv.CAP_PROP_FOCUS, 0.5)
+
+    # Create pi camera
+
+    camera = Picamera2()
+    camera.configure(camera.create_preview_configuration(main={"size": (1600, 1300)}))
+    camera.start()
 
     for num in range(imgcount):
         input("Enter to capture")
         # Read the image from the camera
 
-        cam.set(cv.CAP_PROP_FRAME_WIDTH, int(args.get('-w')))
-        cam.set(cv.CAP_PROP_FRAME_HEIGHT, int(args.get('-h')))
-        cam.set(cv.CAP_PROP_EXPOSURE, int(args.get('-e')))
-        cam.set(cv.CAP_PROP_FPS, 60)
-        cam.set(cv.CAP_PROP_FOCUS, 0.5)
-        ret, frame = cam.read()
+        # Capture openCV frame
+        # ret, frame = cam.read()
+
+        # Capture picamera frame
+
+        frame = camera.capture_array()
 
         # Check if image acquisition is successful
-        if ret:
+        if True:
             filename = os.path.join(image_output_dir, str(num) + '_capture.png')
             cv.imwrite(filename, frame)
         else:

@@ -1,5 +1,6 @@
 # Aero uOttawa companion computer for Ardupilot
 This code repository is intended to be run on a Raspberry pi CM4 on the Ochin baseboard connected to Arducam's OV2311 with global shutter and a resolution of 1600 by 1300. The position data this program captures is intended to be communicated over Mavlink to a Pixhawk running Ardupilot to help it pick up a payload.
+https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
 ![image](/images/cam.jpg)
 
