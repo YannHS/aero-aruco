@@ -5,7 +5,7 @@ camera calibration for distorted images with chess board samples
 reads distorted images, calculates the calibration and write undistorted images
 
 usage:
-    calibrate.py [--debug <output path>] [-w <width>] [-h <height>] [-i <camera config input>] [-o <camera config output>] [-j <output camera json>] [--square_size=<square size>]
+    calibrate.py [--debug <output path>] [-w <width>] [-h <height>] [-c <camera config>] [--square_size=<square size>]
     [--marker_size=<aruco marker size>] [--aruco_dict=<aruco dictionary name>] [<image mask>]
 
 usage example:
@@ -56,8 +56,7 @@ def main():
     args.setdefault('--marker_size', 5)
     args.setdefault('--aruco_dict', 'DICT_4X4_50')
     args.setdefault('--threads', 4)
-    args.setdefault('-i', './camera.json')
-    args.setdefault('-o', './camera.json')
+    args.setdefault('-c', './camera.json')
 
     if not img_names:
         img_mask = '../data/left??.jpg'  # default
@@ -73,7 +72,7 @@ def main():
     square_size = float(args.get('--square_size'))
     marker_size = float(args.get('--marker_size'))
     aruco_dict_name = str(args.get('--aruco_dict'))
-    camera_data_file = str(args.get('-o'))
+    camera_data_file = str(args.get('-c'))
 
     pattern_size = (width, height)
     if pattern_type == 'chessboard':
