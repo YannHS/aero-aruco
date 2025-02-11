@@ -5,7 +5,7 @@ camera calibration for distorted images with chess board samples
 reads distorted images, calculates the calibration and write undistorted images
 
 usage:
-    calibrate.py [--debug <output path>] [-w <width>] [-h <height>] [-t <pattern type>] [--square_size=<square size>]
+    calibrate.py [--debug <output path>] [-w <width>] [-h <height>] [-i <camera config input>] [-o <camera config output>] [-j <output camera json>] [--square_size=<square size>]
     [--marker_size=<aruco marker size>] [--aruco_dict=<aruco dictionary name>] [<image mask>]
 
 usage example:
@@ -16,6 +16,8 @@ default values:
     -w: 4
     -h: 6
     -t: chessboard
+    -i camera.json
+    -o camera.json
     --square_size: 10
     --marker_size: 5
     --aruco_dict: DICT_4X4_50
@@ -54,7 +56,8 @@ def main():
     args.setdefault('--marker_size', 5)
     args.setdefault('--aruco_dict', 'DICT_4X4_50')
     args.setdefault('--threads', 4)
-    args.setdefault('-o', './calibration.json')
+    args.setdefault('-i', './camera.json')
+    args.setdefault('-o', './camera.json')
 
     if not img_names:
         img_mask = '../data/left??.jpg'  # default
@@ -70,7 +73,7 @@ def main():
     square_size = float(args.get('--square_size'))
     marker_size = float(args.get('--marker_size'))
     aruco_dict_name = str(args.get('--aruco_dict'))
-    calibration_data_file = str(args.get('-o'))
+    camera_data_file = str(args.get('-o'))
 
     pattern_size = (width, height)
     if pattern_type == 'chessboard':
@@ -175,11 +178,15 @@ def main():
     # calculate camera distortion
     rms, camera_matrix, dist_coefs, _rvecs, _tvecs = cv.calibrateCamera(obj_points, img_points, (w, h), None, None)
 
+    # Open the existing camera json in read write mode
+    calibration_file = open(camera_data_file, 'rw')
+    camera_params = json.loads(calibration_file.read())
+
+    # Modify the "camera calibration" attribute
+    camera_params["calibration"] = [camera_matrix.tolist(), dist_coefs.ravel().tolist()]
+
     # Write the Camera Matrix and Distortion Coefficients to JSON
-    json_camera_data = json.dumps([camera_matrix.tolist(), dist_coefs.ravel().tolist()], indent=2)
-    calibration_file = open(calibration_data_file, 'w')
-    calibration_file.write(json_camera_data)
-    calibration_file.close()
+    calibration_file.write(json.dumps(camera_params, indent=2))
 
     print("\nRMS:", rms)
     print("camera matrix:\n", camera_matrix)
