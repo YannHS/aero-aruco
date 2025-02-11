@@ -6,14 +6,16 @@ https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
 ## Setup
 ```commandline
-python -m venv venv
+git clone https://github.com/YannHS/aero-aruco.git
+cd aero-aruco
+python -m venv --system-site-package venv
 source venv/bin/activate
-pip instal -r requirements.txt
+pip install --ignore-installed  -r requirements.txt
 ```
 
 ## Usage
 The overall workflow is:
-1. Create a `camera.json` following the template:
+1. Create a `camera.json` for *your* following the template:
 ```json
 {
   "calibration": [],
@@ -24,16 +26,10 @@ The overall workflow is:
 }
 ```
 2. Capture an image of a chessboard or Charuco board for calibration.
-3. Calculate the camera coefficients using `calibration.py` to be saved for later in a `.json`
+3. Calculate the camera coefficients using `calibration.py` to add the calibration coefficients
+to the camera file
 4. Run `main.py` to use the calibration data to get marker positions using the camera
 
-Example:
-```commandline
-python image_capture.py -c 3 -w 1600 -h 1300 # This captures images for calibration
-python calibration.py -w 9 -h 6 --square_size 22 cam_output/0_capture.png # This determines distortion coefficiants from the image when using the chessboard calibration pattern.
-python generate_tag.py # Generates the Aruco tag for detecting
-python main.py -c calibration.json -w 1600 -h 1300 # This runs the main tag detection and pose estimation program
-```
 
 ## Todo
 - [x] implement image capture and saving
