@@ -4,17 +4,28 @@ https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
 ![image](/images/cam.jpg)
 
-## Dependencies
-`opencv-python`
-`numpy`
-`getopt`
-`picamera2`
+## Setup
+```commandline
+python -m venv venv
+source venv/bin/activate
+pip instal -r requirements.txt
+```
 
 ## Usage
-The intended workflow is:
-1. Capture an image of a chessboard or Charuco board using `image_capture.py` 
-2. Calculate the camera coefficients using `calibration.py` to be saved for later in a `.json`
-3. Run `main.py` to use the calibration data to get marker positions using the camera
+The overall workflow is:
+1. Create a `camera.json` following the template:
+```json
+{
+  "calibration": [],
+  "camera_height": 1300,
+  "camera_name": "Arducam OV2311",
+  "camera_width": 1600,
+  "format": "Y10P" 
+}
+```
+2. Capture an image of a chessboard or Charuco board for calibration.
+3. Calculate the camera coefficients using `calibration.py` to be saved for later in a `.json`
+4. Run `main.py` to use the calibration data to get marker positions using the camera
 
 Example:
 ```commandline
