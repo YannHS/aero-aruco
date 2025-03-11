@@ -19,6 +19,71 @@ import time
 import cv2 as cv
 import numpy as np
 import json
+from pymavlink import mavutil
+from time import sleep, time
+
+
+# The Craft class connects to the flight controller and sends controlling messages
+class Craft:
+    def __init__(self, connectstr):
+        self.debug = False
+        self.mode = None
+        self.connected = None
+        self.vehicle = None
+        self.connect(connectstr)
+        self.precloiter_opt = self.find_precloiter_opt()
+        if self.precloiter_opt:
+            print("Precision loiter switch found: Channel "+str(self.precloiter_opt))
+    def connect(self, connectstr):
+        try:
+            # self.vehicle = connect(connectstr, wait_ready=True, rate=1)
+            # self.vehicle = connect(connectstr, wait_ready=True)
+            # self.vehicle = connect(connectstr, wait_ready=['system_status','mode'], baud=921600)
+            self.vehicle = mavutil.mavlink_connection("/dev/ttyS0", wait_ready=['system_status','mode'], baud=57600)
+            self.connected = True
+        except:
+            print("Error connecting to vehicle")
+            self.connected = False
+    # Define function to send distance_message mavlink message for mavlink based rangefinder, must be >10hz
+    # http://mavlink.org/messages/common#DISTANCE_SENSOR
+    def send_distance_message(self, dist):
+        msg = self.vehicle.message_factory.distance_sensor_encode(
+            0,          # time since system boot, not used
+            1,          # min distance cm
+            10000,      # max distance cm
+            dist,       # current distance, must be int
+            0,          # type = laser?
+            0,          # onboard id, not used
+            mavutil.mavlink.MAV_SENSOR_ROTATION_PITCH_270, # must be set to MAV_SENSOR_ROTATION_PITCH_270 for mavlink rangefinder, represents downward facing
+            0           # covariance, not used
+        )
+        self.vehicle.send_mavlink(msg)
+        self.vehicle.flush()
+        #if args.verbose:
+            #log.debug("Sending mavlink distance_message:" +str(dist))
+    # Define function to send landing_target mavlink message for mavlink based precision landing
+    # http://mavlink.org/messages/common#LANDING_TARGET
+    def send_land_message(self, x,y,z, time_usec=0, target_num=0):
+        msg = self.vehicle.message_factory.landing_target_encode(
+            time_usec,          # time target data was processed, as close to sensor capture as possible
+            target_num,          # target num, not used
+            mavutil.mavlink.MAV_FRAME_BODY_NED, # frame, not used
+            x,          # X-axis angular offset, in radians
+            y,          # Y-axis angular offset, in radians
+            z,          # distance, in meters
+            0,          # Target x-axis size, in radians
+            0,          # Target y-axis size, in radians
+            0,          # x	float	X Position of the landing target on MAV_FRAME
+            0,          # y	float	Y Position of the landing target on MAV_FRAME
+            0,          # z	float	Z Position of the landing target on MAV_FRAME
+            (1,0,0,0),  # q	float[4]	Quaternion of landing target orientation (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
+            2,          # type of landing target: 2 = Fiducial marker
+            1,          # position_valid boolean
+        )
+        self.vehicle.send_mavlink(msg)
+        self.vehicle.flush()
+        #if args.verbose:
+            #log.debug("Sending mavlink landing_target - time_usec:{:.0f}, x:{}, y:{}, z:{}".format(time_usec, str(x), str(y), str(z)))
 
 
 
