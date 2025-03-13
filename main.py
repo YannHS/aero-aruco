@@ -39,7 +39,7 @@ class Craft:
             # self.vehicle = connect(connectstr, wait_ready=True, rate=1)
             # self.vehicle = connect(connectstr, wait_ready=True)
             # self.vehicle = connect(connectstr, wait_ready=['system_status','mode'], baud=921600)
-            self.vehicle = mavutil.mavlink_connection("/dev/ttyS0", wait_ready=['system_status','mode'], baud=57600)
+            self.vehicle = mavutil.mavlink_connection(connectstr, wait_ready=['system_status','mode'], baud=57600)
             self.connected = True
         except:
             print("Error connecting to vehicle")
@@ -148,8 +148,22 @@ def main():
     ], dtype=np.float32)
 
 
+    # Do flight controller setup
+    craft = Craft("/dev/ttyS0")
+
+    craft.vehicle.parameters['PLND_ENABLED'] = 1
+    craft.vehicle.parameters['PLND_TYPE'] = 1  # Mavlink landing backend
+    craft.vehicle.parameters['PLND_EST_TYPE'] = 0
+
+    if 'PLND_BUFFER' in craft.vehicle.parameters:
+        craft.vehicle.parameters['PLND_BUFFER'] = 250
+
+
+
     # Main Program loop
     while True:
+        sleep(0.1)
+
         # aquire camera image
         if camera_params["capture_method"] == "OpenCV":
             #Capture openCV frame
@@ -172,6 +186,8 @@ def main():
             for x in aruco_corners:
                 flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
                 print("Rotation:", '\n', rvec, '\n', "Translation:", '\n', tvec)
+
+        craft.send_land_message(0, 0, 69)
 
 
 main()
