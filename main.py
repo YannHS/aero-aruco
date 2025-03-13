@@ -148,9 +148,6 @@ def main():
     # Do flight controller setup
     craft = Craft("/dev/ttyS0")
 
-    craft.vehicle.parameters['PLND_ENABLED'] = 1
-    craft.vehicle.parameters['PLND_TYPE'] = 1  # Mavlink landing backend
-    craft.vehicle.parameters['PLND_EST_TYPE'] = 0
 
     if 'PLND_BUFFER' in craft.vehicle.parameters:
         craft.vehicle.parameters['PLND_BUFFER'] = 250
