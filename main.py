@@ -31,9 +31,6 @@ class Craft:
         self.connected = None
         self.vehicle = None
         self.connect(connectstr)
-        self.precloiter_opt = self.find_precloiter_opt()
-        if self.precloiter_opt:
-            print("Precision loiter switch found: Channel "+str(self.precloiter_opt))
     def connect(self, connectstr):
         try:
             # self.vehicle = connect(connectstr, wait_ready=True, rate=1)
