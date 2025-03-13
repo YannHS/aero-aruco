@@ -149,10 +149,6 @@ def main():
     craft = Craft("/dev/ttyS0")
 
 
-    if 'PLND_BUFFER' in craft.vehicle.parameters:
-        craft.vehicle.parameters['PLND_BUFFER'] = 250
-
-
 
     # Main Program loop
     while True:
