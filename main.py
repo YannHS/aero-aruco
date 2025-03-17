@@ -89,6 +89,9 @@ def main():
         [-markerLength, -markerLength, 0]
     ], dtype=np.float32)
 
+    # Take note of the current time
+    starttime = time.time_ns()
+
     # Start a connection listening on the serial port
     the_connection = mavutil.mavlink_connection("/dev/ttyS0", 57600)
 
@@ -122,16 +125,22 @@ def main():
                 flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
                 print("Rotation:", '\n', rvec, '\n', "Translation:", '\n', tvec)
 
+
+
+
             # Send the location to the flight controller
-            the_connection.mav.command_long_send(the_connection.target_system,
-                                                 the_connection.target_component,
-                                                 mavutil.mavlink.MAV_CMD_LANDING_TARGET,
-                                                 mavutil.mavlink.MAV_FRAME_BODY_FRD,
+            the_connection.mav.command_long_send(time.time_ns() - starttime,
+                                                 0,
+                                                 12,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0,
                                                  tvec[0], # x (Forward)
                                                  tvec[1], # y (Right)
                                                  tvec[2], # z (Down)
-                                                 [1, 0, 0, 0],
-                                                 mavutil.mavlink.LANDING_TARGET_TYPE_VISION_FIDUCIAL,
+                                                 0,
+                                                 0,
                                                  1
                                                  )
 
