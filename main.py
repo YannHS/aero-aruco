@@ -22,6 +22,7 @@ import json
 from pymavlink import mavutil
 import pymavlink
 from time import sleep, time
+import math
 
 def wait_heartbeat(m):
     '''wait for a heartbeat so we know the target system IDs'''
@@ -129,19 +130,20 @@ def main():
 
 
             # Send the location to the flight controller
-            the_connection.mav.command_long_send(time.time_ns() - starttime,
-                                                 0,
-                                                 12,
-                                                 0,
-                                                 0,
-                                                 0,
-                                                 0,
+            the_connection.mav.command_long_send(time.time_ns() - starttime, # Time since "boot"
+                                                 0, # not used
+                                                 12, # Reference frame
+                                                 0, # angle_x, not used since we have position
+                                                 0, # angle_y, not used since we have position
+                                                 math.sqrt(tvec[0]^2 + tvec[1]^2 + tvec[2]^2),
+                                                 0, # not used
+                                                 0, # not used
                                                  tvec[0], # x (Forward)
                                                  tvec[1], # y (Right)
                                                  tvec[2], # z (Down)
-                                                 0,
-                                                 0,
-                                                 1
+                                                 0, # not used
+                                                 0, # not used
+                                                 1 # marks that we want to use x, y, z coords
                                                  )
 
 
