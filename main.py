@@ -128,7 +128,7 @@ def main():
 
 
             # Send the location to the flight controller
-            the_connection.mav.landing_target_send(int(time.time() * 1e6),  # Time since "boot"
+            the_connection.mav.landing_target_send(int(time() * 1e6),  # Time since "boot"
                                                  0,  # not used
                                                  mavutil.mavlink.MAV_FRAME_BODY_NED,  # Reference frame
                                                  0,  # angle_x, not used since we have position
