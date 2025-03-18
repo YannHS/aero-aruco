@@ -139,7 +139,7 @@ def main():
                                                  tvec[0],  # x (Forward)
                                                  tvec[1],  # y (Right)
                                                  tvec[2],  # z (Down)
-                                                 0,  # not used
+                                                 [0, 0, 0, 1],  # not used
                                                  0,  # not used
                                                  1  # marks that we want to use x, y, z coords
                                                  )
