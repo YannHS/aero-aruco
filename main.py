@@ -21,8 +21,9 @@ import numpy as np
 import json
 from pymavlink import mavutil
 import pymavlink
-from time import sleep, time
+from time import sleep, time_ns, process_time_ns
 import math
+
 
 def wait_heartbeat(m):
     '''wait for a heartbeat so we know the target system IDs'''
@@ -90,10 +91,7 @@ def main():
         [-markerLength, -markerLength, 0]
     ], dtype=np.float32)
 
-    # Take note of the current time
-    starttime = time.time_ns()
-
-    # Start a connection listening on the serial port
+        # Start a connection listening on the serial port
     the_connection = mavutil.mavlink_connection("/dev/ttyS0", 57600)
 
     # Wait for the first heartbeat
@@ -130,20 +128,20 @@ def main():
 
 
             # Send the location to the flight controller
-            the_connection.mav.command_long_send(time.time_ns() - starttime, # Time since "boot"
-                                                 0, # not used
-                                                 12, # Reference frame
-                                                 0, # angle_x, not used since we have position
-                                                 0, # angle_y, not used since we have position
+            the_connection.mav.command_long_send(process_time_ns(),  # Time since "boot"
+                                                 0,  # not used
+                                                 12,  # Reference frame
+                                                 0,  # angle_x, not used since we have position
+                                                 0,  # angle_y, not used since we have position
                                                  math.sqrt(tvec[0]^2 + tvec[1]^2 + tvec[2]^2),
-                                                 0, # not used
-                                                 0, # not used
-                                                 tvec[0], # x (Forward)
-                                                 tvec[1], # y (Right)
-                                                 tvec[2], # z (Down)
-                                                 0, # not used
-                                                 0, # not used
-                                                 1 # marks that we want to use x, y, z coords
+                                                 0,  # not used
+                                                 0,  # not used
+                                                 tvec[0],  # x (Forward)
+                                                 tvec[1],  # y (Right)
+                                                 tvec[2],  # z (Down)
+                                                 0,  # not used
+                                                 0,  # not used
+                                                 1  # marks that we want to use x, y, z coords
                                                  )
 
 
