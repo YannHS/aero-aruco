@@ -21,7 +21,7 @@ import numpy as np
 import json
 from pymavlink import mavutil
 import pymavlink
-from time import sleep, time_ns, process_time_ns
+from time import sleep, time
 import math
 
 
@@ -128,9 +128,9 @@ def main():
 
 
             # Send the location to the flight controller
-            the_connection.mav.command_long_send(process_time_ns(),  # Time since "boot"
+            the_connection.mav.landing_target_send(int(time.time() * 1e6),  # Time since "boot"
                                                  0,  # not used
-                                                 12,  # Reference frame
+                                                 mavutil.mavlink.MAV_FRAME_BODY_NED,  # Reference frame
                                                  0,  # angle_x, not used since we have position
                                                  0,  # angle_y, not used since we have position
                                                  0,
