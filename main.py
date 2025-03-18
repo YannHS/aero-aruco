@@ -133,7 +133,7 @@ def main():
                                                  12,  # Reference frame
                                                  0,  # angle_x, not used since we have position
                                                  0,  # angle_y, not used since we have position
-                                                 math.sqrt(tvec[0]^2 + tvec[1]^2 + tvec[2]^2),
+                                                 0,
                                                  0,  # not used
                                                  0,  # not used
                                                  tvec[0],  # x (Forward)
