@@ -29,6 +29,18 @@
   ],
   "camera_height": 1080,
   "camera_name": "Integrated Framework Laptop Camera",
+  "camera_vec": [
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
   "camera_width": 1920,
   "capture_method": "OpenCV",
   "format": ""

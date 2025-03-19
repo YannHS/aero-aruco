@@ -19,10 +19,14 @@ import time
 import cv2 as cv
 import numpy as np
 import json
+
+from pcbnew import VECTOR3D
 from pymavlink import mavutil
 import pymavlink
 from time import sleep, time
 import math
+
+from pymavlink.rotmat import Vector3
 
 
 def wait_heartbeat(m):
@@ -30,6 +34,11 @@ def wait_heartbeat(m):
     print("Waiting for APM heartbeat")
     msg = m.recv_match(type='HEARTBEAT', blocking=True)
     print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_component))
+
+def prepare_position(detected_tags):
+    """
+    Given the input dict of tags, this function return a single position vector for sending to the flight controller
+    """
 
 
 def main():
@@ -117,12 +126,23 @@ def main():
         # Detect the tag corners
         aruco_corners, aruco_ids, rejected = aruco_detector.detectMarkers(frame)
 
-        # Make sure a tag was actually detected
+        # Create a dict to store the detected tags along with their positions
+        detected_tags = {}
+
+        # Go through the detected tags
         if len(aruco_corners) > 0:
 
-            for x in aruco_corners:
-                flag, rvec, tvec = cv.solvePnP(obj_points, x, cam_matrix, dist_coefficients)
-                print("Rotation:", '\n', rvec, '\n', "Translation:", '\n', tvec)
+            for x in range(len(aruco_corners)):
+                # Compute the rotation and rotation
+                flag, rvec, tvec = cv.solvePnP(obj_points, aruco_corners[x], cam_matrix, dist_coefficients)
+
+                print("Tag ID: " + str(int(aruco_ids[x])))
+                #print("Rotation:", '\n', rvec)
+                print("Translation:", '\n', tvec)
+
+                # Add the tag ID and position to the detected_tags dict
+                detected_tags[int(aruco_ids[x][0])] = tvec
+
 
 
 

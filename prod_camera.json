@@ -27,6 +27,18 @@
   ],
   "camera_height": 1300,
   "camera_name": "Arducam OV2311",
+  "camera_vec": [
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
   "camera_width": 1600,
   "capture_method": "PiCamera",
   "format": "Y10P"
