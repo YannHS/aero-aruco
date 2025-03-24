@@ -35,30 +35,71 @@ def wait_heartbeat(m):
     msg = m.recv_match(type='HEARTBEAT', blocking=True)
     print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_component))
 
-def prepare_position(detected_tags):
+
+def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, camera_offset, cam_matrix, dist_coefficients):
     """
-    Given the input dict of tags, this function return a single position vector for sending to the flight controller
+    Given the input detected tags, pad tags, payload tag, and camera offset vectors, this function returns a
+    single position vector for sending to the flight controller
     """
+
+    # Don't try to compute anything if no tags were detected
+    if len(detected_corners) == 0:
+        return False
+
+    # Create a dict to store the detected tags along with their positions
+    detected_tags = {}
+
+
+
+    # Go through the detected tags
+    for x in range(len(detected_corners)):
+        # Get the measured length of the tag being detected
+        markerLength = pad_tags[str(aruco_ids[x])] / 2
+
+        # Set coordinate system
+        obj_points = np.array([
+            [-markerLength, markerLength, 0],
+            [markerLength, markerLength, 0],
+            [markerLength, -markerLength, 0],
+            [-markerLength, -markerLength, 0]
+        ], dtype=np.float32)
+
+        # Compute the rotation and rotation
+        flag, rvec, tvec = cv.solvePnP(obj_points, detected_corners[x], cam_matrix, dist_coefficients)
+
+        # Add the tag ID and position to the detected_tags dict
+        detected_tags[int(aruco_ids[x][0])] = tvec
+
+        # Todo: Implement a system that calculates the final position using the averaged individual position of each tag
+
+        if detected_tags.get(payload_tag_ID) is not None:
+            return detected_tags[payload_tag_ID]
+        else:
+            return False
 
 
 def main():
     # Get CMD arguments
     try:
-        args, img_names = getopt.getopt(sys.argv[1:], 'c:s', [])
+        args, img_names = getopt.getopt(sys.argv[1:], 'c:p:m', [])
     except:
         # print help information and exit
         print("""usage:
-    main.py [-c <camera_file>] [-s <aruco tag size>]
+    main.py [-c <camera file>] [-p <pad file>] [-m <mavlink communication True/False>]
 """)
     args = dict(args)
 
     # Set the default values
     args.setdefault('-c', 'camera.json')
-    args.setdefault('-s', '100')
+    args.setdefault('-p', 'pad.json')
+    args.setdefault('-m', 'True')
+
 
     # Assign arguments to variables
     calibration_data_file = str(args.get('-c'))
-    marker_size = int(args.get('-s'))
+    pad_data_file = str(args.get('-p'))
+    use_mavlink = bool(args.get('-m'))
+    #marker_size = int(args.get('-s'))
 
     # Read the camera parameters
     camera_params = json.loads(open(calibration_data_file, 'r').read())
@@ -91,20 +132,17 @@ def main():
     aruco_parameters = cv.aruco.DetectorParameters()
     aruco_detector = cv.aruco.ArucoDetector(aruco_dict, aruco_parameters)
 
-    # Set coordinate system
-    markerLength = marker_size/2
-    obj_points = np.array([
-        [-markerLength, markerLength, 0],
-        [markerLength, markerLength, 0],
-        [markerLength, -markerLength, 0],
-        [-markerLength, -markerLength, 0]
-    ], dtype=np.float32)
 
+
+    # Read the landing lad parameters
+    pad_params = json.loads(open(pad_data_file, 'r').read())
+
+    if use_mavlink:
         # Start a connection listening on the serial port
-    the_connection = mavutil.mavlink_connection("/dev/ttyS0", 57600)
+        the_connection = mavutil.mavlink_connection("/dev/ttyS0", 57600)
 
-    # Wait for the first heartbeat
-    wait_heartbeat(the_connection)
+        # Wait for the first heartbeat
+        wait_heartbeat(the_connection)
 
     # Main Program loop
     while True:
@@ -126,27 +164,17 @@ def main():
         # Detect the tag corners
         aruco_corners, aruco_ids, rejected = aruco_detector.detectMarkers(frame)
 
-        # Create a dict to store the detected tags along with their positions
-        detected_tags = {}
+        # compute the location of the payload
+        computed_position = compute_position(aruco_corners,
+                                             aruco_ids,
+                                             pad_params["pad_tags"],
+                                             int(pad_params["payload_tag_ID"]),
+                                             camera_params["camera_offset"],
+                                             cam_matrix,
+                                             dist_coefficients)
 
-        # Go through the detected tags
-        if len(aruco_corners) > 0:
-
-            for x in range(len(aruco_corners)):
-                # Compute the rotation and rotation
-                flag, rvec, tvec = cv.solvePnP(obj_points, aruco_corners[x], cam_matrix, dist_coefficients)
-
-                print("Tag ID: " + str(int(aruco_ids[x])))
-                #print("Rotation:", '\n', rvec)
-                print("Translation:", '\n', tvec)
-
-                # Add the tag ID and position to the detected_tags dict
-                detected_tags[int(aruco_ids[x][0])] = tvec
-
-
-
-
-
+        # Make sure that tags were actually detected
+        if computed_position != False and use_mavlink:
             # Send the location to the flight controller
             the_connection.mav.landing_target_send(int(time() * 1000000),  # Time since "boot"
                                                  0,  # not used
@@ -156,13 +184,16 @@ def main():
                                                  0,
                                                  0,  # not used
                                                  0,  # not used
-                                                 tvec[0],  # x (Forward)
-                                                 tvec[1],  # y (Right)
-                                                 tvec[2],  # z (Down)
+                                                 computed_position[0],  # x (Forward)
+                                                 computed_position[1],  # y (Right)
+                                                 computed_position[2],  # z (Down)
                                                  [0, 0, 0, 1],  # not used
                                                  0,  # not used
                                                  1  # marks that we want to use x, y, z coords
                                                  )
 
+# ======================================================================================================================
+
 
 main()
+
