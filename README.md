@@ -36,6 +36,8 @@ to the camera file
 - [x] Calculate calibration data
 - [x] Write the calibration data for future use
 - [X] write a main program to determine marker locations
-- [ ] Implement communication over Mavlink to convey the goal to the Pixhawk flight controller
+- [X] Implement communication over Mavlink to convey the goal to the Pixhawk flight controller
+- [ ] Take into account multiple detected tags
+- [ ] Take into account tag and camera offsets
 - [ ] Use Automation to automate the setup of this software on a fresh Raspbian install
 - [ ] Create software to visualize the location data obtained by this program
