@@ -21,7 +21,6 @@ import json
 from pymavlink import mavutil
 from time import sleep, time
 import math
-import vector_vis
 
 
 def rotate_vector_3d(position, rot_vector):
@@ -120,7 +119,7 @@ def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, came
             flag, rvec, tvec = cv.solvePnP(obj_points, detected_corners[x], cam_matrix, dist_coefficients, flags=cv.SOLVEPNP_IPPE_SQUARE)
 
             # Add the tag ID and position to the detected_tags dict
-            detected_tags[int(aruco_ids[x][0])] = (tvec, rvec)
+            detected_tags[int(aruco_ids[x][0])] = (tvec.flatten(), rvec.flatten())
 
     # Implement a system that calculates the final position using the averaged individual position of each tag
 
@@ -128,40 +127,44 @@ def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, came
     if detected_tags.get(payload_tag_ID) is not None:
 
         # Payload has only one tag, so no offset needs to be applied.
-        final_vec = rotate_vector_3d(0.001*detected_tags[payload_tag_ID][0], camera_offset[1]) + camera_offset[0]
-        # print(detected_tags[payload_tag_ID][1][0])
+        final_vec = rotate_vector_3d(0.001*detected_tags[payload_tag_ID][0], camera_offset[1]) + np.array(camera_offset[0], dtype=np.float32)
     else:
         # DLZ requires tags to be offset
         return False
-        #
+
 
     # return final_vec
 
 
 def main():
-    vector_vis.start_visualizer()
 
     # Get CMD arguments
     try:
-        args, img_names = getopt.getopt(sys.argv[1:], 'c:p:m', [])
+        args, img_names = getopt.getopt(sys.argv[1:], 'c:p:m:v', [])
     except:
         # print help information and exit
         print("""usage:
-    main.py [-c <camera file>] [-p <pad file>] [-m <mavlink communication True/False>]
+    main.py [-c <camera file>] [-p <pad file>] [-m <mavlink communication true/false>] [-v <GUI true/false>]
 """)
     args = dict(args)
 
     # Set the default values
     args.setdefault('-c', 'camera.json')
     args.setdefault('-p', 'pad.json')
-    args.setdefault('-m', 'True')
+    args.setdefault('-m', 'true')
+    args.setdefault('-v', 'false')
 
 
     # Assign arguments to variables
     calibration_data_file = str(args.get('-c'))
     pad_data_file = str(args.get('-p'))
-    use_mavlink = bool(args.get('-m'))
-    #marker_size = int(args.get('-s'))
+    use_mavlink = args.get('-m').lower() == 'true'
+    use_GUI = args.get('-v').lower() == 'true'
+
+    # start the visualizer if the argument was set
+    if use_GUI:
+        import vector_vis
+        vector_vis.start_visualizer()
 
     # Read the camera parameters
     camera_params = json.loads(open(calibration_data_file, 'r').read())
@@ -208,7 +211,7 @@ def main():
 
     # Main Program loop
     while True:
-        sleep(0.1)
+        sleep(0.03)
 
         # aquire camera image
         if camera_params["capture_method"] == "OpenCV":
@@ -254,6 +257,8 @@ def main():
                                                  1  # marks that we want to use x, y, z coords
                                                  )
 
+            # Print the computed result to the console for debugging
+            print(computed_position)
 # ======================================================================================================================
 
 

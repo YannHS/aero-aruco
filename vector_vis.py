@@ -1,6 +1,4 @@
 """
-arrowviz.py
-
 taken from Open-ai's o3 mini LLM, DON'T TRUST THIS MODULE
 This module provides a real-time 3D arrow visualization using Pygame and OpenGL.
 It runs the visualization loop on a background thread and exposes an update_vectors()
