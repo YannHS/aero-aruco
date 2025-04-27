@@ -1,0 +1,12 @@
+[Unit]
+Description=Sends precision landing data to Ardupilot
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ochin/aero_aruco
+ExecStart=/usr/bin/python3 /home/ochin/aero_aruco/main.py
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
