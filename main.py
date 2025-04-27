@@ -3,30 +3,72 @@ Aruco pose estimation
 uses live camera data to get Aruco tag pose
 
 usage:
-    main.py [-c <calibration file>] [-w <capture width>] [-h <capture height>]
+    main.py [-c <camera file>] [-p <pad file>] [-m <send mavlink data>]
 
 usage example:
-    main.py -c calibration.json -w 1920 -h 1080
+    main.py -c camera.json -p pad.json -m
 
 default values:
-    -c: calibration.json
+    -c: dingus
 '''
 
 import sys
 import getopt
 import time
-
 import cv2 as cv
 import numpy as np
 import json
-
-from pcbnew import VECTOR3D
 from pymavlink import mavutil
-import pymavlink
 from time import sleep, time
 import math
+import vector_vis
 
-from pymavlink.rotmat import Vector3
+
+def rotate_vector_3d(position, rot_vector):
+    """
+    Rotate a 3D position vector using Euler angles.
+    This function was taken from Open-ai's 3o mini LLM, this function should not be trusted
+
+    Args:
+        position (np.ndarray): A NumPy array of shape (3,) representing (x, y, z) in meters.
+        rot_vector (np.ndarray): A NumPy array of shape (3,) where:
+                                 rot_vector[0] is the rotation about the x-axis (in radians),
+                                 rot_vector[1] is the rotation about the y-axis (in radians),
+                                 rot_vector[2] is the rotation about the z-axis (in radians).
+
+    Returns:
+        np.ndarray: The rotated 3D position vector.
+    """
+    rx, ry, rz = rot_vector  # Extract Euler angles for rotation about each axis.
+
+    # Rotation matrix about the x-axis.
+    Rx = np.array([
+        [1, 0, 0],
+        [0, np.cos(rx), -np.sin(rx)],
+        [0, np.sin(rx),  np.cos(rx)]
+    ])
+
+    # Rotation matrix about the y-axis.
+    Ry = np.array([
+        [ np.cos(ry), 0, np.sin(ry)],
+        [0, 1, 0],
+        [-np.sin(ry), 0, np.cos(ry)]
+    ])
+
+    # Rotation matrix about the z-axis.
+    Rz = np.array([
+        [np.cos(rz), -np.sin(rz), 0],
+        [np.sin(rz),  np.cos(rz), 0],
+        [0, 0, 1]
+    ])
+
+    # Combine the rotations. Here we apply Rx, then Ry, then Rz.
+    # Note: Matrix multiplication is not commutative so the order matters.
+    R = Rz @ Ry @ Rx
+
+    # Apply rotation
+    rotated_position = R @ position
+    return rotated_position
 
 
 def wait_heartbeat(m):
@@ -35,12 +77,21 @@ def wait_heartbeat(m):
     msg = m.recv_match(type='HEARTBEAT', blocking=True)
     print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_component))
 
+def average_vectors(vector_list):
+    avg_vec = np.array([0, 0, 0], dtype=np.float32)
+    for x in range(vector_list.length):
+        avg_vec += vector_list[x] / vector_list.length
+    return avg_vec
+
 
 def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, camera_offset, cam_matrix, dist_coefficients):
     """
     Given the input detected tags, pad tags, payload tag, and camera offset vectors, this function returns a
     single position vector for sending to the flight controller
     """
+
+    # Initialize the return vector
+    final_vec = False
 
     # Don't try to compute anything if no tags were detected
     if len(detected_corners) == 0:
@@ -49,36 +100,47 @@ def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, came
     # Create a dict to store the detected tags along with their positions
     detected_tags = {}
 
-
-
-    # Go through the detected tags
+    # Go through the tag corners and add the computed positions to the detected tags dict
     for x in range(len(detected_corners)):
-        # Get the measured length of the tag being detected
-        markerLength = pad_tags[str(aruco_ids[x])] / 2
+        # Check if we care about the particular tag
+        if pad_tags.get(str(aruco_ids[x][0])) is not None:
 
-        # Set coordinate system
-        obj_points = np.array([
-            [-markerLength, markerLength, 0],
-            [markerLength, markerLength, 0],
-            [markerLength, -markerLength, 0],
-            [-markerLength, -markerLength, 0]
-        ], dtype=np.float32)
+            # Get the measured length of the tag being detected
+            markerLength = pad_tags[str(aruco_ids[x][0])][0] / 2
 
-        # Compute the rotation and rotation
-        flag, rvec, tvec = cv.solvePnP(obj_points, detected_corners[x], cam_matrix, dist_coefficients)
+            # Set coordinate system
+            obj_points = np.array([
+                [-markerLength, markerLength, 0],
+                [markerLength, markerLength, 0],
+                [markerLength, -markerLength, 0],
+                [-markerLength, -markerLength, 0]
+            ], dtype=np.float32)
 
-        # Add the tag ID and position to the detected_tags dict
-        detected_tags[int(aruco_ids[x][0])] = tvec
+            # Compute the rotation and rotation
+            flag, rvec, tvec = cv.solvePnP(obj_points, detected_corners[x], cam_matrix, dist_coefficients, flags=cv.SOLVEPNP_IPPE_SQUARE)
 
-        # Todo: Implement a system that calculates the final position using the averaged individual position of each tag
+            # Add the tag ID and position to the detected_tags dict
+            detected_tags[int(aruco_ids[x][0])] = (tvec, rvec)
 
-        if detected_tags.get(payload_tag_ID) is not None:
-            return detected_tags[payload_tag_ID]
-        else:
-            return False
+    # Implement a system that calculates the final position using the averaged individual position of each tag
+
+    # check if the payload tag was detected
+    if detected_tags.get(payload_tag_ID) is not None:
+
+        # Payload has only one tag, so no offset needs to be applied.
+        final_vec = rotate_vector_3d(0.001*detected_tags[payload_tag_ID][0], camera_offset[1]) + camera_offset[0]
+        # print(detected_tags[payload_tag_ID][1][0])
+    else:
+        # DLZ requires tags to be offset
+        return False
+        #
+
+    # return final_vec
 
 
 def main():
+    vector_vis.start_visualizer()
+
     # Get CMD arguments
     try:
         args, img_names = getopt.getopt(sys.argv[1:], 'c:p:m', [])
@@ -174,7 +236,7 @@ def main():
                                              dist_coefficients)
 
         # Make sure that tags were actually detected
-        if computed_position != False and use_mavlink:
+        if not (computed_position is False) and use_mavlink:
             # Send the location to the flight controller
             the_connection.mav.landing_target_send(int(time() * 1000000),  # Time since "boot"
                                                  0,  # not used

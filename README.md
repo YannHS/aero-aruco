@@ -15,7 +15,7 @@ pip install --ignore-installed  -r requirements.txt
 
 ## Usage
 The overall workflow is:
-1. Create a `camera.json` for *your* following the template:
+1. Create a `camera.json` for *your* camera following the template:
 ```json
 {
   "calibration": [],
