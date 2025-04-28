@@ -29,8 +29,8 @@
   "camera_name": "Arducam OV2311",
   "camera_offset": [
     [
-      0.0,
       0.09,
+      0.0,
       0.18
     ],
     [
