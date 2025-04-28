@@ -249,8 +249,8 @@ def main():
                                                  0,
                                                  0,  # not used
                                                  0,  # not used
-                                                 computed_position[0],  # x (Forward)
-                                                 computed_position[1],  # y (Right)
+                                                 -1 * computed_position[0],  # x (Forward)
+                                                 -1 * computed_position[1],  # y (Right)
                                                  computed_position[2],  # z (Down)
                                                  [0, 0, 0, 1],  # not used
                                                  0,  # not used
