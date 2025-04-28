@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/ochin/aero_aruco
-ExecStart=/usr/bin/python3 /home/ochin/aero_aruco/main.py -c cameras/prod_camera.json -p pads/simple_pad.json -m true -v false
+WorkingDirectory=/home/ochin/aero-aruco
+ExecStart=/home/ochin/aero-aruco/venv/bin/python /home/ochin/aero-aruco/main.py -c cameras/prod_camera.json -p pads/simple_pad.json -m true -v false
 Restart=on-failure
 
 [Install]

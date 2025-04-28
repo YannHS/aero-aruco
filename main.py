@@ -133,7 +133,7 @@ def compute_position(detected_corners, aruco_ids, pad_tags, payload_tag_ID, came
         return False
 
 
-    # return final_vec
+    return final_vec
 
 
 def main():
